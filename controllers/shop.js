@@ -1,5 +1,5 @@
 import { Product } from "../models/product.js";
-import { Cart } from "../models/cart.js";
+import Cart from "../models/cart.js";
 import { where } from "sequelize";
 
 export const getIndexPage = (req, res, next) => {
@@ -39,24 +39,39 @@ export const getProductPage = (req, res, next) => {
 };
 
 export const getCartPage = (req, res, next) => {
-  Cart.getCart((cart) => {
-    Product.fetchAll((products) => {
-      const cartProducts = [];
-      for (const product of products) {
-        const cartProductData = cart.products.find(
-          (prod) => prod.id === product.id
-        );
-        if (cartProductData) {
-          cartProducts.push({ productData: product, qty: cartProductData.qty });
-        }
-      }
-      res.render("shop/cart", {
-        pageTitle: "Cart",
-        path: "/cart",
-        products: cartProducts,
-      });
-    });
-  });
+  // Cart.getCart((cart) => {
+  //   Product.fetchAll((products) => {
+  //     const cartProducts = [];
+  //     for (const product of products) {
+  //       const cartProductData = cart.products.find(
+  //         (prod) => prod.id === product.id
+  //       );
+  //       if (cartProductData) {
+  //         cartProducts.push({ productData: product, qty: cartProductData.qty });
+  //       }
+  //     }
+  //     res.render("shop/cart", {
+  //       pageTitle: "Cart",
+  //       path: "/cart",
+  //       products: cartProducts,
+  //     });
+  //   });
+  // });
+  req.user
+    .getCart()
+    .then((cart) => {
+      return cart
+        .getProducts()
+        .then((products) => {
+          res.render("shop/cart", {
+            pageTitle: "Cart",
+            path: "/cart",
+            products: products,
+          });
+        })
+        .catch((err) => console.log(err));
+    })
+    .catch((err) => console.log(err));
 };
 
 export const postCart = (req, res, next) => {
