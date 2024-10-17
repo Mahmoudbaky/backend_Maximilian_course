@@ -25,6 +25,19 @@ app.set("views", "views"); // this will set the views directory to views  (this 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public"))); // this will make the public folder accessible to the browser
 
+// I did't understand this !!!!!
+// This is a dummy user loged in the site
+app.use((req, res, next) => {
+  User.findByPk(1)
+    .then((user) => {
+      req.user = user;
+      next();
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
 app.use("/admin", adminRoutes); // this will automatically add /admin to the routes in adminRoutes
 app.use(shopRoutes);
 

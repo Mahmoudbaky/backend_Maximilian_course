@@ -1,3 +1,4 @@
+import { where } from "sequelize";
 import { Product } from "../models/product.js";
 
 export const getAddProductPage = (req, res, next) => {
@@ -13,14 +14,17 @@ export const postAddProductPage = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  Product.create({
-    title: title,
-    price: price,
-    imageUrl: imageUrl,
-    description: description,
-  })
-    .then((res) => {
+  // this creatProduct method is created by sequlaize since we made a relation between the user and the proudcts (one to many)
+  req.user
+    .createProduct({
+      title: title,
+      price: price,
+      imageUrl: imageUrl,
+      description: description,
+    })
+    .then((result) => {
       console.log("Product Created");
+      res.redirect("/admin/products");
     })
     .catch((err) => {
       console.log(err);
@@ -33,8 +37,12 @@ export const getEditProductPage = (req, res, next) => {
     return res.redirect("/");
   }
   const prodId = req.params.productId;
-  Product.findByPk(prodId)
-    .then((product) => {
+
+  req.user
+    .getProducts({ where: { id: prodId } })
+    .then((products) => {
+      const product = products[0];
+      console.log(product);
       if (!product) {
         return res.redirect("/");
       }
@@ -70,7 +78,8 @@ export const postEditProductPage = (req, res, next) => {
 };
 
 export const getProductsPage = (req, res, next) => {
-  Product.findAll()
+  req.user
+    .getProducts()
     .then((products) => {
       res.render("admin/products", {
         prods: products,
