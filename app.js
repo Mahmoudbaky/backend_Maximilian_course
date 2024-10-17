@@ -11,6 +11,8 @@ import sequelize from "./util/database.js";
 import { Product } from "./models/product.js";
 import { User } from "./models/user.js";
 import { name } from "ejs";
+import Cart from "./models/cart.js";
+import CartItem from "./models/cart-item.js";
 
 // constants
 const app = express();
@@ -43,8 +45,13 @@ app.use(shopRoutes);
 
 app.use(getErrorPage);
 
+// Relations between the tables
 Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
 User.hasMany(Product);
+User.hasOne(Cart);
+Cart.belongsTo(User);
+Cart.belongsToMany(Product, { through: CartItem });
+Product.belongsToMany(Cart, { through: CartItem });
 
 sequelize
   // .sync({ force: true })
@@ -59,7 +66,9 @@ sequelize
     return user;
   })
   .then((user) => {
-    // console.log(user);
+    return user.createCart();
+  })
+  .then((cart) => {
     app.listen(port, () => {
       console.log(`Example app listening at http://localhost:${port}`);
     });
