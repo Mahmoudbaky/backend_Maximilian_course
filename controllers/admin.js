@@ -19,8 +19,9 @@ export const postAddProductPage = (req, res, next) => {
     imageUrl: imageUrl,
     description: description,
   })
-    .then((res) => {
+    .then((result) => {
       console.log("Product Created");
+      res.redirect("/admin/products");
     })
     .catch((err) => {
       console.log(err);
