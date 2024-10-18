@@ -6,10 +6,10 @@ import {
   getProductPage,
   getIndexPage,
   getCartPage,
-  getCheckoutPage,
   getOrdersPage,
   postCart,
   postCartDeleteProduct,
+  postOrder,
 } from "../controllers/shop.js";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename); // get the name of the directory the
 /* ----- router import ----- */
 export const router = express.Router();
 
-/* ----- midlleware configuration ----- */
+/* ----- configuration ----- */
 router.get("/", getIndexPage);
 
 router.get("/products", getProductsPage);
@@ -31,6 +31,6 @@ router.post("/cart", postCart);
 
 router.post("/cart-delete-item", postCartDeleteProduct);
 
-router.get("/checkout", getCheckoutPage);
-
 router.get("/orders", getOrdersPage);
+
+router.post("/create-order", postOrder);
