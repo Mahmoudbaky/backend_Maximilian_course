@@ -1,8 +1,14 @@
-import { Sequelize } from "sequelize";
+import mongoose from "mongoose";
 
-const sequelize = new Sequelize("node", "root", "hoda@12345", {
-  dialect: "mysql",
-  host: "localhost",
-});
+export const monogConnect = (cb) => {
+  const uri =
+    "mongodb+srv://ma7mouudbaky:hoda12345@nodejs.srb9q.mongodb.net/?retryWrites=true&w=majority&appName=NodeJS";
 
-export default sequelize;
+  mongoose
+    .connect(uri)
+    .then((client) => {
+      console.log("connecte!");
+      cb(client);
+    })
+    .catch((err) => console.log(err));
+};

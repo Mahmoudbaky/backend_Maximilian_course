@@ -3,19 +3,11 @@ import * as fs from "node:fs";
 import express from "express";
 import bodyParser from "body-parser";
 import path from "node:path";
-import { router as adminRoutes } from "./routes/admin.js";
-import { router as shopRoutes } from "./routes/shop.js";
+// import { router as adminRoutes } from "./routes/admin.js";
+// import { router as shopRoutes } from "./routes/shop.js";
 import { fileURLToPath } from "node:url";
 import { getErrorPage } from "./controllers/error.js";
-import sequelize from "./util/database.js";
-
-import { Product } from "./models/product.js";
-import { User } from "./models/user.js";
-import { name } from "ejs";
-import Cart from "./models/cart.js";
-import CartItem from "./models/cart-item.js";
-import Order from "./models/order.js";
-import OrderItem from "./models/order-item.js";
+import { monogConnect } from "./util/database.js";
 
 // constants
 const app = express();
@@ -33,52 +25,68 @@ app.use(express.static(path.join(__dirname, "public"))); // this will make the p
 // I did't understand this !!!!!
 // This is a dummy user loged in the site
 app.use((req, res, next) => {
-  User.findByPk(1)
-    .then((user) => {
-      req.user = user;
-      next();
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  // User.findByPk(1)
+  //   .then((user) => {
+  //     req.user = user;
+  //     next();
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //   });
 });
 
-app.use("/admin", adminRoutes); // this will automatically add /admin to the routes in adminRoutes
-app.use(shopRoutes);
+// app.use("/admin", adminRoutes); // this will automatically add /admin to the routes in adminRoutes
+// app.use(shopRoutes);
 
 app.use(getErrorPage);
 
-// Relations between the tables
-Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
-User.hasMany(Product);
-User.hasOne(Cart);
-Cart.belongsTo(User);
-Cart.belongsToMany(Product, { through: CartItem });
-Product.belongsToMany(Cart, { through: CartItem });
-Order.belongsTo(User);
-User.hasMany(Order);
-Order.belongsToMany(Product, { through: OrderItem });
-
-sequelize
-  // .sync({ force: true })
-  .sync()
-  .then((result) => {
-    return User.findByPk(1);
-  })
-  .then((user) => {
-    if (!user) {
-      return User.create({ name: "Mahmoud", email: "Ma7mouudbaky@gmail.com" });
-    }
-    return user;
-  })
-  .then((user) => {
-    return user.createCart();
-  })
-  .then((cart) => {
-    app.listen(port, () => {
-      console.log(`Example app listening at http://localhost:${port}`);
-    });
-  })
-  .catch((err) => {
-    console.log(err);
+monogConnect((client) => {
+  console.log(client);
+  app.listen(port, () => {
+    console.log(`Example app listening at http://localhost:${port}`);
   });
+});
+
+// MySql setup
+
+// import sequelize from "./util/database.js";
+// import { Product } from "./models/product.js";
+// import { User } from "./models/user.js";
+// import { name } from "ejs";
+// import Cart from "./models/cart.js";
+// import CartItem from "./models/cart-item.js";
+// import Order from "./models/order.js";
+// import OrderItem from "./models/order-item.js";
+
+// Relations between the tables
+// Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
+// User.hasMany(Product);
+// User.hasOne(Cart);
+// Cart.belongsTo(User);
+// Cart.belongsToMany(Product, { through: CartItem });
+// Product.belongsToMany(Cart, { through: CartItem });
+// Order.belongsTo(User);
+// User.hasMany(Order);
+// Order.belongsToMany(Product, { through: OrderItem });
+
+// sequelize
+//   // .sync({ force: true })
+//   .sync()
+//   .then((result) => {
+//     return User.findByPk(1);
+//   })
+//   .then((user) => {
+//     if (!user) {
+//       return User.create({ name: "Mahmoud", email: "Ma7mouudbaky@gmail.com" });
+//     }
+//     return user;
+//   })
+//   .then((user) => {
+//     return user.createCart();
+//   })
+//   .then((cart) => {
+//
+//   })
+//   .catch((err) => {
+//     console.log(err);
+//   });
