@@ -7,7 +7,7 @@ import path from "node:path";
 // import { router as shopRoutes } from "./routes/shop.js";
 import { fileURLToPath } from "node:url";
 import { getErrorPage } from "./controllers/error.js";
-import { monogConnect } from "./util/database.js";
+import { mongoConnect } from "./util/database.js";
 
 // constants
 const app = express();
@@ -40,7 +40,7 @@ app.use((req, res, next) => {
 
 app.use(getErrorPage);
 
-monogConnect((client) => {
+mongoConnect((client) => {
   console.log(client);
   app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
