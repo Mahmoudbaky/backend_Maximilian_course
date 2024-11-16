@@ -3,11 +3,12 @@ import * as fs from "node:fs";
 import express from "express";
 import bodyParser from "body-parser";
 import path from "node:path";
-// import { router as adminRoutes } from "./routes/admin.js";
-// import { router as shopRoutes } from "./routes/shop.js";
+import { router as adminRoutes } from "./routes/admin.js";
+import { router as shopRoutes } from "./routes/shop.js";
 import { fileURLToPath } from "node:url";
 import { getErrorPage } from "./controllers/error.js";
 import { mongoConnect } from "./util/database.js";
+import { User } from "./models/user.js";
 
 // constants
 const app = express();
@@ -25,23 +26,22 @@ app.use(express.static(path.join(__dirname, "public"))); // this will make the p
 // I did't understand this !!!!!
 // This is a dummy user loged in the site
 app.use((req, res, next) => {
-  // User.findByPk(1)
-  //   .then((user) => {
-  //     req.user = user;
-  //     next();
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  //   });
+  User.findByid("6719163c252025238e8cdd56")
+    .then((user) => {
+      req.user = new User(user.name, user.email, user.cart, user._id);
+      next();
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
-// app.use("/admin", adminRoutes); // this will automatically add /admin to the routes in adminRoutes
-// app.use(shopRoutes);
+app.use("/admin", adminRoutes); // this will automatically add /admin to the routes in adminRoutes
+app.use(shopRoutes);
 
 app.use(getErrorPage);
 
-mongoConnect((client) => {
-  console.log(client);
+mongoConnect(() => {
   app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
   });

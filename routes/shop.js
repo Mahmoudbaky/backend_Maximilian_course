@@ -31,6 +31,6 @@ router.post("/cart", postCart);
 
 router.post("/cart-delete-item", postCartDeleteProduct);
 
-router.get("/orders", getOrdersPage);
+// router.get("/orders", getOrdersPage);
 
 router.post("/create-order", postOrder);
