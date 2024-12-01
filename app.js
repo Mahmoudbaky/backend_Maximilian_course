@@ -1,92 +1,71 @@
-// imports
-import * as fs from "node:fs";
+/* Imports */
 import express from "express";
 import bodyParser from "body-parser";
+import mongoose from "mongoose";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { router as adminRoutes } from "./routes/admin.js";
 import { router as shopRoutes } from "./routes/shop.js";
-import { fileURLToPath } from "node:url";
-import { getErrorPage } from "./controllers/error.js";
-import { mongoConnect } from "./util/database.js";
-import { User } from "./models/user.js";
+import { router as authRoutes } from "./routes/auth.js";
+import * as errorController from "./controllers/error.js";
+import User from "./models/user.js";
+import session from "express-session";
+import ConnectMongoDBSession from "connect-mongodb-session";
 
-// constants
-const app = express();
-const port = 3000;
+/* Constants */
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory the file is in
+const app = express();
+const monogUri =
+  "mongodb+srv://ma7mouudbaky:hoda12345@nodejs.srb9q.mongodb.net/shop?retryWrites=true&w=majority&appName=NodeJS";
+const port = 3000;
+const MongoDBSession = ConnectMongoDBSession(session);
 
-// middleware
-app.set("view engine", "ejs"); // this will set the view engine to pug
-app.set("views", "views"); // this will set the views directory to views  (this is the default btw , so you don't have to do this)
+const store = new MongoDBSession({
+  uri: monogUri,
+  collection: "sessions",
+});
+
+/* MiddleWares */
+app.set("view engine", "ejs");
+app.set("views", "views");
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, "public"))); // this will make the public folder accessible to the browser
+app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  session({
+    secret: "my secret",
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+  })
+);
 
-// I did't understand this !!!!!
-// This is a dummy user loged in the site
-app.use((req, res, next) => {
-  User.findByid("6719163c252025238e8cdd56")
-    .then((user) => {
-      req.user = new User(user.name, user.email, user.cart, user._id);
-      next();
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-});
-
-app.use("/admin", adminRoutes); // this will automatically add /admin to the routes in adminRoutes
+app.use("/admin", adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 
-app.use(getErrorPage);
+app.use(errorController.get404);
 
-mongoConnect(() => {
-  app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`);
+mongoose
+  .connect(monogUri)
+  .then((result) => {
+    User.findOne().then((user) => {
+      if (!user) {
+        const user = new User({
+          name: "mahmoud",
+          email: "ma7mouudbaky@gmail.com",
+          cart: {
+            items: [],
+          },
+        });
+        user.save();
+      }
+    });
+
+    app.listen(port);
+    console.log(`http://localhost:${port}`);
+  })
+  .catch((err) => {
+    console.log(err);
   });
-});
-
-// MySql setup
-
-// import sequelize from "./util/database.js";
-// import { Product } from "./models/product.js";
-// import { User } from "./models/user.js";
-// import { name } from "ejs";
-// import Cart from "./models/cart.js";
-// import CartItem from "./models/cart-item.js";
-// import Order from "./models/order.js";
-// import OrderItem from "./models/order-item.js";
-
-// Relations between the tables
-// Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
-// User.hasMany(Product);
-// User.hasOne(Cart);
-// Cart.belongsTo(User);
-// Cart.belongsToMany(Product, { through: CartItem });
-// Product.belongsToMany(Cart, { through: CartItem });
-// Order.belongsTo(User);
-// User.hasMany(Order);
-// Order.belongsToMany(Product, { through: OrderItem });
-
-// sequelize
-//   // .sync({ force: true })
-//   .sync()
-//   .then((result) => {
-//     return User.findByPk(1);
-//   })
-//   .then((user) => {
-//     if (!user) {
-//       return User.create({ name: "Mahmoud", email: "Ma7mouudbaky@gmail.com" });
-//     }
-//     return user;
-//   })
-//   .then((user) => {
-//     return user.createCart();
-//   })
-//   .then((cart) => {
-//
-//   })
-//   .catch((err) => {
-//     console.log(err);
-//   });

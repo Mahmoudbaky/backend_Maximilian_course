@@ -1,36 +1,25 @@
-import path from "path";
-import { fileURLToPath } from "url";
+// const path = require('path');
+
 import express from "express";
-import {
-  getProductsPage,
-  getProductPage,
-  getIndexPage,
-  getCartPage,
-  getOrdersPage,
-  postCart,
-  postCartDeleteProduct,
-  postOrder,
-} from "../controllers/shop.js";
 
-const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
-const __dirname = path.dirname(__filename); // get the name of the directory the file is in
+import * as shopController from "../controllers/shop.js";
 
-/* ----- router import ----- */
 export const router = express.Router();
 
-/* ----- configuration ----- */
-router.get("/", getIndexPage);
+router.get("/", shopController.getIndex);
 
-router.get("/products", getProductsPage);
+router.get("/products", shopController.getProducts);
 
-router.get("/products/:productId", getProductPage); // any dynamic route should be placed after the static routes
+router.get("/products/:productId", shopController.getProduct);
 
-router.get("/cart", getCartPage);
+router.get("/cart", shopController.getCart);
 
-router.post("/cart", postCart);
+router.post("/cart", shopController.postCart);
 
-router.post("/cart-delete-item", postCartDeleteProduct);
+router.post("/cart-delete-item", shopController.postCartDeleteProduct);
 
-// router.get("/orders", getOrdersPage);
+router.post("/create-order", shopController.postOrder);
 
-router.post("/create-order", postOrder);
+router.get("/orders", shopController.getOrders);
+
+export default router;

@@ -1,51 +1,62 @@
-import { Product } from "../models/product.js";
-// import Cart from "../models/cart.js";
-import { where } from "sequelize";
+import Product from "../models/product.js";
+import Order from "../models/order.js";
 
-export const getIndexPage = (req, res, next) => {
-  Product.fetchAll()
+export const getProducts = (req, res, next) => {
+  Product.find()
+    .then((products) => {
+      console.log(products);
+      res.render("shop/product-list", {
+        prods: products,
+        pageTitle: "All Products",
+        path: "/products",
+        isAuthenticated: req.session.isLoggedIn,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+
+export const getProduct = (req, res, next) => {
+  const prodId = req.params.productId;
+  Product.findById(prodId)
+    .then((product) => {
+      res.render("shop/product-detail", {
+        product: product,
+        pageTitle: product.title,
+        path: "/products",
+        isAuthenticated: req.session.isLoggedIn,
+      });
+    })
+    .catch((err) => console.log(err));
+};
+
+export const getIndex = (req, res, next) => {
+  Product.find()
     .then((products) => {
       res.render("shop/index", {
         prods: products,
         pageTitle: "Shop",
         path: "/",
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
-export const getProductsPage = (req, res, next) => {
-  Product.fetchAll()
-    .then((products) => {
-      res.render("shop/product-list", {
-        prods: products,
-        pageTitle: "Products",
-        path: "/products",
-      });
-    })
-    .catch((err) => console.log(err));
-};
+export const getCart = (req, res, next) => {
+  req.session.user
+    .populate("cart.items.productId")
 
-export const getProductPage = (req, res, next) => {
-  Product.findById(req.params.productId)
-    .then((product) => {
-      res.render("shop/product-details", {
-        product: product,
-        pageTitle: product.title,
-        path: "/products",
-      });
-    })
-    .catch((err) => console.log(err));
-};
-
-export const getCartPage = (req, res, next) => {
-  req.user
-    .getCart()
-    .then((products) => {
+    .then((user) => {
+      const products = user.cart.items;
       res.render("shop/cart", {
         path: "/cart",
         pageTitle: "Your Cart",
         products: products,
+        isAuthenticated: req.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));
@@ -57,41 +68,57 @@ export const postCart = (req, res, next) => {
     .then((product) => {
       return req.user.addToCart(product);
     })
-    .then(() => {
+    .then((result) => {
+      console.log(result);
       res.redirect("/cart");
-    })
-    .catch((err) => console.log(err));
+    });
 };
 
 export const postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  req.user
-    .deleteItemFromCart(prodId)
-    .then(() => {
+  req.session.user
+    .removeFromCart(prodId)
+    .then((result) => {
       res.redirect("/cart");
     })
     .catch((err) => console.log(err));
 };
 
 export const postOrder = (req, res, next) => {
-  let fetchedCart;
   req.user
-    .addOrder()
+    .populate("cart.items.productId")
+
+    .then((user) => {
+      const products = user.cart.items.map((i) => {
+        return { quantity: i.quantity, product: { ...i.productId._doc } };
+      });
+      const order = new Order({
+        user: {
+          name: req.user.name,
+          userId: req.user,
+        },
+        products: products,
+      });
+      return order.save();
+    })
     .then((result) => {
+      return req.user.clearCart();
+    })
+    .then(() => {
       res.redirect("/orders");
     })
     .catch((err) => console.log(err));
 };
 
-export const getOrdersPage = (req, res, next) => {
-  req.user
-    .getOrders({ include: ["products"] })
+export const getOrders = (req, res, next) => {
+  Order.find({ "user.userId": req.user._id })
     .then((orders) => {
       res.render("shop/orders", {
-        pageTitle: "Orders",
         path: "/orders",
+        pageTitle: "Your Orders",
         orders: orders,
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
-    .catch();
+    .catch((err) => console.log(err));
 };
