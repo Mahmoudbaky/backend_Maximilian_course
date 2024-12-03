@@ -11,6 +11,7 @@ import * as errorController from "./controllers/error.js";
 import User from "./models/user.js";
 import session from "express-session";
 import ConnectMongoDBSession from "connect-mongodb-session";
+import csurf from "csurf";
 
 /* Constants */
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
@@ -26,6 +27,8 @@ const store = new MongoDBSession({
   collection: "sessions",
 });
 
+const csrfProtection = csurf({});
+
 /* MiddleWares */
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -40,6 +43,14 @@ app.use(
     store: store,
   })
 );
+app.use(csrfProtection);
+
+// to pass these values to all our res.render in shop , admin and auth controllers
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
@@ -50,19 +61,6 @@ app.use(errorController.get404);
 mongoose
   .connect(monogUri)
   .then((result) => {
-    User.findOne().then((user) => {
-      if (!user) {
-        const user = new User({
-          name: "mahmoud",
-          email: "ma7mouudbaky@gmail.com",
-          cart: {
-            items: [],
-          },
-        });
-        user.save();
-      }
-    });
-
     app.listen(port);
     console.log(`http://localhost:${port}`);
   })
