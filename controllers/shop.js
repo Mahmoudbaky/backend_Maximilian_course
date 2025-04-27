@@ -1,5 +1,6 @@
 import Product from "../models/product.js";
 import Order from "../models/order.js";
+import Uesr from "../models/user.js";
 
 export const getIndex = (req, res, next) => {
   Product.find()
@@ -18,7 +19,6 @@ export const getIndex = (req, res, next) => {
 export const getProducts = (req, res, next) => {
   Product.find()
     .then((products) => {
-      console.log(products);
       res.render("shop/product-list", {
         prods: products,
         pageTitle: "All Products",
@@ -45,10 +45,23 @@ export const getProduct = (req, res, next) => {
     .catch((err) => console.log(err));
 };
 
+/**
+ * Renders the cart page with the products currently in the user's cart.
+ * - Populates the user's cart items with product details.
+ * - Passes the populated cart items to the "shop/cart" view for rendering.
+ *
+ * @param {Object} req - The request object, containing the user's session.
+ * @param {Object} res - The response object to render the cart page.
+ * @param {Function} next - The next middleware function.
+ */
+
 export const getCart = (req, res, next) => {
+  const user = Uesr.findById(req.session.user._id);
+  console.log(typeof user.populate);
+  console.log(typeof req.session.user.populate);
   req.session.user
     .populate("cart.items.productId")
-
+    .execPopulate()
     .then((user) => {
       const products = user.cart.items;
       res.render("shop/cart", {
@@ -68,7 +81,6 @@ export const postCart = (req, res, next) => {
       return req.user.addToCart(product);
     })
     .then((result) => {
-      console.log(result);
       res.redirect("/cart");
     });
 };
