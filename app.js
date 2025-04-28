@@ -12,6 +12,7 @@ import User from "./models/user.js";
 import session from "express-session";
 import ConnectMongoDBSession from "connect-mongodb-session";
 import csurf from "csurf";
+import flash from "connect-flash";
 
 /* Constants */
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
@@ -44,9 +45,9 @@ app.use(
   })
 );
 app.use(csrfProtection);
+app.use(flash());
 
 app.use((req, res, next) => {
-  // console.log(req.session.user);
   if (!req.session.user) {
     return next();
   }
