@@ -45,6 +45,19 @@ app.use(
 );
 app.use(csrfProtection);
 
+app.use((req, res, next) => {
+  // console.log(req.session.user);
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
+    .then((user) => {
+      req.user = user;
+      next();
+    })
+    .catch((err) => console.log(err));
+});
+
 // to pass these values to all our res.render in shop , admin and auth controllers
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;

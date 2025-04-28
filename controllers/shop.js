@@ -1,6 +1,5 @@
 import Product from "../models/product.js";
 import Order from "../models/order.js";
-import Uesr from "../models/user.js";
 
 export const getIndex = (req, res, next) => {
   Product.find()
@@ -56,19 +55,16 @@ export const getProduct = (req, res, next) => {
  */
 
 export const getCart = (req, res, next) => {
-  const user = Uesr.findById(req.session.user._id);
-  console.log(typeof user.populate);
-  console.log(typeof req.session.user.populate);
-  req.session.user
+  console.log(req.session.isLoggedIn);
+  req.user
     .populate("cart.items.productId")
-    .execPopulate()
     .then((user) => {
       const products = user.cart.items;
       res.render("shop/cart", {
         path: "/cart",
         pageTitle: "Your Cart",
         products: products,
-        isAuthenticated: req.isLoggedIn,
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));
